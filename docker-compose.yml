@@ -7,7 +7,6 @@ services:
       - ./src/frontend/.env
     restart: always
     build: ./src/frontend
-    command: app.js
 
   backend:
     container_name: backend
@@ -15,4 +14,3 @@ services:
     build: ./src/backend
     ports:
       - "80:80"
-    command: app.py

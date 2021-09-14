@@ -17,3 +17,4 @@ COPY --chown=nonroot:nonroot commands/ commands/
 COPY --chown=nonroot:nonroot app.js .
 
 ENTRYPOINT [ "node" ]
+CMD [ "app.js" ]
