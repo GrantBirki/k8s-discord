@@ -6,5 +6,5 @@ module "frontend" {
   depends_on = [
     module.backend
   ]
-  source = "./modules/frontend/backend"
+  source = "./modules/containers/frontend"
 }
