@@ -6,6 +6,7 @@ metadata:
   labels:
     name: backend
 spec:
+  replicas: 1
   selector:
     matchLabels:
       name: backend
@@ -14,10 +15,12 @@ spec:
       labels:
         name: backend
     spec:
-      replicas: 2
       containers:
         - name: backend
           image: birkik8sacr.azurecr.io/backend:test
+          imagePullPolicy: Always
+          command: ["python3"]
+          args: ["app.py"]
           resources:
             limits:
               cpu: "0.5"
