@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Deployment
+metadata:
+  namespace: frontend
+  name: frontend
+  labels:
+    name: frontend
+spec:
+  selector:
+    matchLabels:
+      name: frontend
+    template:
+      metadata:
+        labels:
+          name: frontend
+    spec:
+      replicas: 2
+      containers:
+        - name: frontend
+          image: birkik8sacr.azurecr.io/frontend:test
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "500Mi"
+            requests:
+              cpu: "0.25"
+              memory: "50Mi"
+          ports:
+            - containerPort: 80
