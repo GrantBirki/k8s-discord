@@ -6,6 +6,7 @@ metadata:
   labels:
     name: frontend
 spec:
+  replicas: 1
   selector:
     matchLabels:
       name: frontend
@@ -14,10 +15,12 @@ spec:
       labels:
         name: frontend
     spec:
-      replicas: 2
       containers:
         - name: frontend
           image: birkik8sacr.azurecr.io/frontend:test
+          imagePullPolicy: Always
+          command: ["node"]
+          args: ["app.js"]
           resources:
             limits:
               cpu: "0.5"
