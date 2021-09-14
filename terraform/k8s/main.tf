@@ -1,7 +1,10 @@
-module "kong" {
-  source = "./modules/kong"
+module "backend" {
+  source = "./modules/containers/backend"
 }
 
-module "monitoring" {
-  source = "./modules/monitoring"
+module "frontend" {
+  depends_on = [
+    module.backend
+  ]
+  source = "./modules/frontend/backend"
 }
