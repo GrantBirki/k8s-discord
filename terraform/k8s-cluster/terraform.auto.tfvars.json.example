@@ -1,0 +1,5 @@
+# I am just an example! Rename this file to terraform.auto.tfvars.json and add actual Azure credentials below. Then remove this comment.
+{
+  "appId": "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaa",
+  "password": "bbbbbb-bbbb-bbbb-bbbb-bbbbbbbb"
+}

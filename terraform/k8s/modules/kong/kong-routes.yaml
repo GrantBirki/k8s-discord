@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example
+  namespace: nginx-example
+  annotations:
+    konghq.com/strip-path: "true"
+    # kubernetes.io/tls-acme: "true" # Uncomment to enable TLS
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod" # Uncomment to enable TLS
+    # konghq.com/plugins: ip-allowlist # Uncomment to enable IP allowlist plugin
+spec:
+  # tls: # Uncomment to enable TLS
+  #   - secretName: "letsencrypt-prod-issuer-account-key" # Uncomment to enable TLS
+  #     hosts: # Uncomment to enable TLS
+  #       - "<www.example.com>" # Uncomment to enable TLS
+
+  ingressClassName: "kong"
+  rules:
+    # - host: <www.example.com> # Uncomment to enable hostname (needed if you enable the external Grafana section below) and indent your YAML
+      - http:
+          paths:
+            - pathType: Prefix
+              path: /
+              backend:
+                service:
+                  name: example
+                  port:
+                    number: 80
+---
+# Un comment the block below to expose your Grafana dashboard publically
+# Note: It is highly recommended to use the IP allowlist plugin to limit access to the dashboard
+# Note2: It is highly recommended to enable the TLS sections as well + the letsencrypt-prod issuer
+#
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: monitoring
+#   namespace: monitoring
+#   annotations:
+#     konghq.com/strip-path: "true"
+#     # kubernetes.io/tls-acme: "true" # Uncomment to enable TLS
+#     # cert-manager.io/cluster-issuer: "letsencrypt-prod" # Uncomment to enable TLS
+#     konghq.com/plugins: ip-allowlist # Comment to disable IP allowlist plugin
+# spec:
+#   # tls: # Uncomment to enable TLS
+#   #   - secretName: "letsencrypt-prod-issuer-account-key" # Uncomment to enable TLS
+#   #     hosts: # Uncomment to enable TLS
+#   #       - "<grafana.example.com>" # Uncomment to enable TLS
+
+#   ingressClassName: "kong"
+#   rules:
+#     - host: <grafana.example.com>
+#       http:
+#         paths:
+#           - pathType: Prefix
+#             path: /
+#             backend:
+#               service:
+#                 name: grafana
+#                 port:
+#                   number: 80

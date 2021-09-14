@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# This is a script to automatically build and deploy your K8s cluster!
+# Note: Deploying this cluster will incur costs
+
+set -e
+
+# Global Directory Variables
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # The directory of this script
+REPO_DIR="$(dirname "$SCRIPT_DIR")" # The root directory of this repository
+
+echo "🔨 Let's build a K8s cluster!"
+
+set +e # Allow failures when checking for dependencies
+
+which tfenv > /dev/null
+
+if [ $? -ne 0 ]; then
+  echo "❌ Please install the Azure CLI to continue! https://docs.microsoft.com/en-us/cli/azure/install-azure-cli | Exiting..."
+  exit 1
+else
+  echo "✅ Azure CLI is installed"
+fi
+
+which az > /dev/null
+
+if [ $? -ne 0 ]; then
+  echo "❌ Please install tfenv to continue! Exiting..."
+  exit 1
+else
+  echo "✅ tfenv is installed"
+fi
+
+which kubectl > /dev/null
+
+if [ $? -ne 0 ]; then
+  echo "❌ Please install kubectl to continue! Exiting..."
+  exit 1
+else
+  echo "✅ kubectl is installed"
+fi
+
+TF_VAR_FILE="terraform/k8s-cluster/terraform.auto.tfvars.json"
+if [ -f "$TF_VAR_FILE" ]; then
+    echo "✅ $TF_VAR_FILE exists"
+else 
+    echo "❌ $TF_VAR_FILE does not exist! Please create it and add your Azure credentials. Exiting..."
+    exit 1
+fi
+
+grep -i "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaa\|bbbbbb-bbbb-bbbb-bbbb-bbbbbbbb" $TF_VAR_FILE
+
+if [ $? -ne 1 ]; then
+  echo "❌ Please update the '$TF_VAR_FILE' file to contain your Azure credentials! Exiting..."
+  exit 1
+else
+  echo "✅ $TF_VAR_FILE contains non-default credentials"
+fi
+
+set -e # Prevent any kind of script failures
+
+# First we deploy the infrastructure for the k8s cluster
+echo "🚀 Deploying 'terraform/k8s-cluster'..."
+cd terraform/k8s-cluster
+terraform init || exit 1
+terraform apply -auto-approve || exit 1
+echo "✅ terraform/k8s-cluster deployed"
+
+echo "⛵ Configuring kubectl environment"
+
+SUBSCRIPTION_ID=$(terraform show | grep -E '\/subscriptions\/(.*)(\/resourcegroups\/?)' --only-matching | sed -E 's/.*\/subscriptions\/(.*)(\/resourcegroups\/?)/\1/' | tr '\n' ' ' | cut -d ' ' -f 1)
+K8S_CLUSTER_NAME=$(terraform show | grep 'kubernetes_cluster_name' | cut -d "=" -f 2 | tr '"' ' ' | xargs)
+RESOURCE_GROUP_NAME=$(terraform show | grep 'resource_group_name' | cut -d "=" -f 2 | tr '"' ' ' | xargs | cut -d ' ' -f 1)
+
+az account set --subscription $SUBSCRIPTION_ID
+az aks get-credentials --resource-group $RESOURCE_GROUP_NAME --name $K8S_CLUSTER_NAME
+
+cd $REPO_DIR
+
+echo "🔨 Time to build K8s resources and apply their manifests on the cluster!"
+
+k8s_success () {
+
+  PROXY_IP=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" service -n kong kong-proxy)
+
+  echo -e "✅ All manifests applied successfully\n"
+  echo -e "🦍 Kong LoadBalancer IP: http://$PROXY_IP"
+  echo -e "📊 Run 'script/grafana' to connect to the Kong metrics dashboard"
+  echo -e "✨ Done! ✨"
+}
+
+k8s_apply () {
+  echo "🚀 Deploying 'terraform/k8s'..."
+  terraform init || exit 1
+  terraform apply -auto-approve || exit 1
+  echo "✅ terraform/k8s deployed"
+}
+
+cd $REPO_DIR/terraform/k8s
+
+# Apply all the manifests in the k8s/ directory
+set +e
+while true
+do
+  k8s_apply
+  if [ $? -ne 0 ]; then
+    echo "💡 A possible race condition occured. Sleeping and trying again... Hint: press 'ctrl+c' to abort the retry loop"
+    sleep 5
+  else
+    k8s_success
+    break
+  fi
+done

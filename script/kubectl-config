@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Setups up your ~/.kube/config file
+# You need to have your k8s-cluster deployed before running this script
+
+set -e
+
+# Global Directory Variables
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # The directory of this script
+REPO_DIR="$(dirname "$SCRIPT_DIR")" # The root directory of this repository
+
+cd $REPO_DIR/terraform/k8s-cluster
+
+echo "⛵ Configuring kubectl environment"
+
+SUBSCRIPTION_ID=$(terraform show | grep -E '\/subscriptions\/(.*)(\/resourcegroups\/?)' --only-matching | sed -E 's/.*\/subscriptions\/(.*)(\/resourcegroups\/?)/\1/' | tr '\n' ' ' | cut -d ' ' -f 1)
+K8S_CLUSTER_NAME=$(terraform show | grep 'kubernetes_cluster_name' | cut -d "=" -f 2 | tr '"' ' ' | xargs)
+RESOURCE_GROUP_NAME=$(terraform show | grep 'resource_group_name' | cut -d "=" -f 2 | tr '"' ' ' | xargs | cut -d ' ' -f 1)
+
+az account set --subscription $SUBSCRIPTION_ID
+az aks get-credentials --resource-group $RESOURCE_GROUP_NAME --name $K8S_CLUSTER_NAME

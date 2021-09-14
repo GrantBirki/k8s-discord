@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "bent": "^7.3.12",
+    "discord-api-types": "^0.23.1",
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0"
+  }
+}

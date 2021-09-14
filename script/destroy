@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# This is a script to automatically destroy your K8s cluster!
+# Note: 💥 THIS WILL INSTANTLY DESTROY YOUR CLUSTER! 💥
+
+# Global Directory Variables
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # The directory of this script
+REPO_DIR="$(dirname "$SCRIPT_DIR")" # The root directory of this repository
+
+echo "💥 Let's DESTROY your K8s cluster!"
+
+read -p "Continue with the complete destruction of your K8s cluster (y/n)? " CONT
+if [ "$CONT" = "y" ]; then
+  echo "✅ Approval for destroy accepted";
+else
+  echo "❌ Exiting!";
+  exit 1
+fi
+
+which tfenv > /dev/null
+
+if [ $? -ne 0 ]; then
+  echo "❌ Please install tfenv to continue! Exiting..."
+  exit 1
+else
+  echo "✅ tfenv is installed"
+fi
+
+TF_VAR_FILE="terraform/k8s-cluster/terraform.auto.tfvars.json"
+if [ -f "$TF_VAR_FILE" ]; then
+    echo "✅ $TF_VAR_FILE exists"
+else 
+    echo "❌ $TF_VAR_FILE does not exist! Please create it and add your Azure credentials. Exiting..."
+    exit 1
+fi
+
+grep -i "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaa\|bbbbbb-bbbb-bbbb-bbbb-bbbbbbbb" $TF_VAR_FILE
+
+if [ $? -ne 1 ]; then
+  echo "❌ Please update the '$TF_VAR_FILE' file to contain your Azure credentials! Exiting..."
+  exit 1
+else
+  echo "✅ $TF_VAR_FILE contains non-default credentials"
+fi
+
+echo "💥 Destroying 'terraform/k8s-cluster'..."
+cd terraform/k8s-cluster
+terraform init || exit 1
+terraform destroy -auto-approve || exit 1
+echo "✅ terraform/k8s-cluster destroyed"
+echo ""
+echo "✨ Done! ✨"

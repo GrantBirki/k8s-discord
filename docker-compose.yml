@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+  frontend:
+    container_name: frontend
+    env_file: 
+      - ./src/frontend/.env
+    restart: always
+    build: ./src/frontend
+    command: app.js
+
+  backend:
+    container_name: backend
+    restart: always
+    build: ./src/backend
+    ports:
+      - "5000:5000"
+    command: app.py

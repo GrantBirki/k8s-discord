@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# This is a local test script to build and push to the Azure container registry
+
+set -e
+
+# Global Directory Variables
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # The directory of this script
+REPO_DIR="$(dirname "$SCRIPT_DIR")" # The root directory of this repository
+ACR_NAME="birkik8sacr"
+
+echo "🔨 Let's build a some images and push them"
+
+echo "🔃 Logging into Azure ACR: $ACR_NAME"
+
+az acr login -n $ACR_NAME
+
+echo "✅ Successfully logged into ACR"
+
+cd $REPO_DIR/src/frontend
+docker build -t $ACR_NAME.azurecr.io/frontend:test .
+docker push $ACR_NAME.azurecr.io/frontend:test
+echo "✅ Successfully pushed the frontend image"
+
+cd $REPO_DIR/src/backend
+docker build -t $ACR_NAME.azurecr.io/backend:test .
+docker push $ACR_NAME.azurecr.io/backend:test
+echo "✅ Successfully pushed the backend image"

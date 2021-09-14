@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Get the password and url of the Grafana dashboard for your cluster.
+# Oh, and it port-forward to localhost:3000
+
+# Reset
+OFF='\033[0m'
+
+# Regular Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+
+# Get Admin password for Grafana
+GRAFANA_PASSWORD=$(kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo)
+echo -e "🔑 Grafana Password:$BLUE $GRAFANA_PASSWORD$OFF | Username:$BLUE admin$OFF"
+
+# Port Forward to view Grafana Dashboard - Note: add an '&' to the kubectl command to background the port-forward process
+echo -e "🌐 Port-Forward Grafana Dashboard:$BLUE http://localhost:3000$OFF"
+echo -e "💡 Press$YELLOW ctrl+c$OFF to end the port-forward process\n"
+POD_NAME=$(kubectl get pods --namespace monitoring -l "app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace monitoring port-forward $POD_NAME 3000
