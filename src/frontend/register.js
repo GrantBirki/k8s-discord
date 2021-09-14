@@ -9,9 +9,9 @@ const fs = require('fs');
 
 // Load env vars
 dotenv.config();
-const TEST_GUILD_ID = process.env.TEST_GUILD_ID;
+const TEST_GUILD_ID = BigInt(process.env.TEST_GUILD_ID);
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_ID = BigInt(process.env.CLIENT_ID);
 
 // Creats a new client object
 const { Client, Intents, Collection } = require('discord.js');
