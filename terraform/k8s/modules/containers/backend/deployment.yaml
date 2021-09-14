@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: backend
@@ -9,10 +9,10 @@ spec:
   selector:
     matchLabels:
       name: backend
-    template:
-      metadata:
-        labels:
-          name: backend
+  template:
+    metadata:
+      labels:
+        name: backend
     spec:
       replicas: 2
       containers:
