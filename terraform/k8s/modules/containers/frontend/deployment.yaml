@@ -25,17 +25,17 @@ spec:
             - name: DISCORD_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: frontend_secret
+                  name: frontend-secret
                   key: DISCORD_TOKEN
             - name: TEST_GUILD_ID
               valueFrom:
                 secretKeyRef:
-                  name: frontend_secret
+                  name: frontend-secret
                   key: TEST_GUILD_ID
             - name: CLIENT_ID
               valueFrom:
                 secretKeyRef:
-                  name: frontend_secret
+                  name: frontend-secret
                   key: CLIENT_ID
             - name: ENVIRONMENT
               value: "${ENVIRONMENT}"
