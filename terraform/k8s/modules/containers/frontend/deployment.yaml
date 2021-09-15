@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: birkik8sacr.azurecr.io/frontend:test
+          image: birkik8sacr.azurecr.io/frontend:${IMAGE_TAG}
           imagePullPolicy: Always
           command: ["node"]
           args: ["app.js"]

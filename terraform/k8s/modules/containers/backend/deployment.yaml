@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: birkik8sacr.azurecr.io/backend:test
+          image: birkik8sacr.azurecr.io/backend:${IMAGE_TAG}
           imagePullPolicy: Always
           command: ["python3"]
           args: ["app.py"]
