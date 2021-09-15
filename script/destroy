@@ -43,8 +43,15 @@ else
   echo "✅ $TF_VAR_FILE contains non-default credentials"
 fi
 
+echo "💥 Destroying 'terraform/k8s'..."
+cd $REPO_DIR/terraform/k8s
+terraform init || exit 1
+terraform destroy -auto-approve || exit 1
+echo "✅ terraform/k8s destroyed"
+echo ""
+
 echo "💥 Destroying 'terraform/k8s-cluster'..."
-cd terraform/k8s-cluster
+cd $REPO_DIR/terraform/k8s-cluster
 terraform init || exit 1
 terraform destroy -auto-approve || exit 1
 echo "✅ terraform/k8s-cluster destroyed"
