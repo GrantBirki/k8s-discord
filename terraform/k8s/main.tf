@@ -1,5 +1,9 @@
 module "backend" {
   source = "./modules/containers/backend"
+
+  # Environment variables
+  IMAGE_TAG   = var.IMAGE_TAG
+  ENVIRONMENT = var.ENVIRONMENT
 }
 
 module "frontend" {
@@ -10,5 +14,6 @@ module "frontend" {
   TEST_GUILD_ID = var.TEST_GUILD_ID
   CLIENT_ID     = var.CLIENT_ID
   # Environment variables
-  ENVIRONMENT   = var.ENVIRONMENT
+  IMAGE_TAG   = var.IMAGE_TAG
+  ENVIRONMENT = var.ENVIRONMENT
 }
