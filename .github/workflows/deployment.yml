@@ -1,0 +1,211 @@
+name: deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          src:
+            - 'src/**'
+          terraform:
+            - 'terraform/**'
+
+  test:
+
+      needs: changes
+      if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform == 'true'
+
+      runs-on: ubuntu-latest
+
+      steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - uses: actions/cache@v2
+        id: cache
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        working-directory: src/backend
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "cache miss - installing dependencies"
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: python vuln check
+        working-directory: src/backend
+        run: |
+          pip install safety
+          safety check
+
+  build:
+
+    needs: [changes, test]
+    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+      - uses: azure/login@v1
+        if: github.event_name == 'push'
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: 'ACR Login'
+        if: github.event_name == 'push'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      # In this step, this action saves a list of existing images,
+      # the cache is created without them in the post run.
+      # It also restores the cache if it exists.
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+      
+      # This job just ensures the images are built properly. In the future it will ensure they run properly as well
+      - name: 'Build image - ci-test'
+        if: github.event_name == 'pull_request'
+        working-directory: src
+        run: |
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:ci-test frontend
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:ci-test backend
+
+      - name: 'Build and Push image - latest'
+        if: github.event_name == 'push'
+        working-directory: src
+        run: |
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest frontend
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest backend
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:backend
+
+  terraform:
+
+    needs: [changes, build]
+    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.6
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Terraform version
+        run: terraform --version
+
+      - name: Terraform fmt
+        working-directory: terraform
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        working-directory: terraform
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        if: github.event_name == 'pull_request'
+        working-directory: terraform
+        id: plan
+        env:
+          # Config
+          TF_VAR_IMAGE_TAG: ci-test
+          # Creds
+          TF_VAR_AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
+          TF_VAR_AZURE_PASSWORD: ${{ secrets.AZURE_PASSWORD }}
+          TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: terraform plan -no-color
+        continue-on-error: true
+
+      - uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `## Terraform Plan 🪐
+            - Terraform Format and Style 🖌: \`${{ steps.fmt.outcome }}\`
+            - Terraform Initialization ⚙️: \`${{ steps.init.outcome }}\`
+            - Terraform Validation 🤖: ${{ steps.validate.outputs.stdout }}
+            - Terraform Plan 📖: \`${{ steps.plan.outcome }}\`
+            
+            <details><summary><b>Show Plan</b></summary>
+            
+            \`\`\`${process.env.PLAN}\`\`\`
+            
+            </details>
+            
+            > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform\`, Workflow: \`${{ github.workflow }}\``;
+              
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform apply
+        if: github.event_name == 'push'
+        working-directory: terraform
+        env:
+          # Config
+          TF_VAR_IMAGE_TAG: latest
+          # Creds
+          TF_VAR_AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
+          TF_VAR_AZURE_PASSWORD: ${{ secrets.AZURE_PASSWORD }}
+          TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: terraform apply -auto-approve
+
+      # Add me later to get Discord push notifications on deployment! 😊
+      # - name: Discord notification
+      #   if: github.event_name == 'push'
+      #   env:
+      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_DEPLOYMENT }}
+      #   uses: Ilshidur/action-discord@0.3.2
+      #   with:
+      #     args: 'The project {{ EVENT_PAYLOAD.repository.full_name }} has been deployed to production 🚀'
