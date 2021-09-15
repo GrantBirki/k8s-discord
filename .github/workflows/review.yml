@@ -1,0 +1,51 @@
+name: review
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [ main ]
+jobs:
+  misspell:
+    name: runner / misspell
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code.
+        uses: actions/checkout@v2
+      - name: misspell
+        uses: reviewdog/action-misspell@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          locale: "US"
+
+  first-interaction:
+    name: runner / first-interaction
+    runs-on: ubuntu-latest
+    steps:
+      - name: first-interaction
+        uses: actions/first-interaction@v1.1.0
+        if: github.event_name == 'pull_request'
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: Thanks for opening your first issue!
+          pr-message: |
+            # Welcome!
+
+            Thank you for opening your first pull request! Please ensure you have read the full `CONTRIBUTING.md` guide before continuing.
+
+            ## What's next?
+
+            The next steps to getting this pull request deployed are as follows:
+
+            1. Ensure that all CI checks are successful
+            2. Reivew the Terraform plan and ensure it looks correct (If applicable)
+            3. Request review on your pull request and obtain an approval
+            4. Merge your pull request! ✨
+
+            ## Deployment
+
+            Once you merge your pull request to the `main` branch a deployment will be automatically triggered for you.
+
+            In roughly ~5 minutes your changes will deployed to production
+
+            That's all! Thanks for contributing!
