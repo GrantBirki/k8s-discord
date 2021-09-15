@@ -1,0 +1,5 @@
+# I am just an example! Rename this file to terraform.auto.tfvars.json and add credentials below. Then these comments
+# NOTE: All Kubernetes secrets MUST be base64 encoded with no newlines! EX: echo -n "mysecret" | base64
+{
+  "DISCORD_TOKEN": "<base64encodedstring>"
+}
