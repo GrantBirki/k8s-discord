@@ -7,6 +7,13 @@ variable "project_name" {
   type        = string
 }
 
+ # You must pass in the IPs you wish to allow as a variable
+variable "allowed_ip_list" {
+  description = "The list of IP addresses that are allowed to access the cluster's management API"
+  type = list(string) # The value is a list of strings
+  sensitive = true
+}
+
 variable "node_count" {
   description = "Number of Nodes in your K8s cluster"
   default     = 2
