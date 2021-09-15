@@ -6,7 +6,7 @@ variable "DISCORD_TOKEN" {
 
 variable "TEST_GUILD_ID" {
   description = "The Discord Guild ID to use for testing (if applicable)"
-  default     = "none"
+  default     = ""
   type        = string
   sensitive   = true
 }

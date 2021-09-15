@@ -9,8 +9,17 @@ const fs = require('fs');
 
 // Load env vars
 dotenv.config();
-const TEST_GUILD_ID = BigInt(process.env.TEST_GUILD_ID);
+
+// Set the TEST_GUILD_ID
+var TEST_GUILD_ID = process.env.TEST_GUILD_ID;
+if (!process.env.TEST_GUILD_ID || process.env.TEST_GUILD_ID === '') {
+    TEST_GUILD_ID = null;
+} else {
+    TEST_GUILD_ID = BigInt(process.env.TEST_GUILD_ID);
+}
+// Set the DISCORD_TOKEN
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
+// Set the CLIENT_ID
 const CLIENT_ID = BigInt(process.env.CLIENT_ID);
 
 // Creats a new client object
