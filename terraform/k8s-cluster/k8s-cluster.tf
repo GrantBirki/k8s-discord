@@ -17,6 +17,7 @@ resource "azurerm_kubernetes_cluster" "default" {
   resource_group_name = azurerm_resource_group.default.name
   dns_prefix          = "${var.project_name}-k8s"
 
+  api_server_authorized_ip_ranges = var.allowed_ip_list
   default_node_pool {
     name            = "default"
     node_count      = var.node_count
@@ -36,4 +37,17 @@ resource "azurerm_kubernetes_cluster" "default" {
   tags = {
     created_by = "Terraform"
   }
+}
+
+# Attach the K8s cluster to ACR
+
+data "azuread_service_principal" "aks_principal" {
+  application_id = var.appId
+}
+
+resource "azurerm_role_assignment" "acrpull_role" {
+  scope                            = azurerm_container_registry.acr.id
+  role_definition_name             = "AcrPull"
+  principal_id                     = data.azuread_service_principal.aks_principal.id
+  skip_service_principal_aad_check = true
 }
