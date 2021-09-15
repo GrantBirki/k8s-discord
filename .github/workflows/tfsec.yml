@@ -1,0 +1,25 @@
+name: tfsec
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [ main ]
+jobs:
+  tfsec:
+    name: runner / tfsec
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v2
+
+      - name: Run tfsec with reviewdog output on the PR
+        uses: reviewdog/action-tfsec@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          working_directory: terraform
+          reporter: github-pr-review # Change reviewdog reporter
+          filter_mode: nofilter
+          fail_on_error: true # Fail action if errors are found
+          tfsec_flags: "-e AZU009"
