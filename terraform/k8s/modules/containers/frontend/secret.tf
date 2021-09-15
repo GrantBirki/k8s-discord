@@ -4,8 +4,6 @@ data "kubectl_path_documents" "frontend_secret_manifest" {
   ]
   sensitive_vars = {
     DISCORD_TOKEN = "${var.DISCORD_TOKEN}"
-    TEST_GUILD_ID = "${var.TEST_GUILD_ID}"
-    CLIENT_ID     = "${var.CLIENT_ID}"
   }
   pattern = "modules/containers/frontend/secret.yaml"
 }
