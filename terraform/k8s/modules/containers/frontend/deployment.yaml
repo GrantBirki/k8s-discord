@@ -21,6 +21,24 @@ spec:
           imagePullPolicy: Always
           command: ["node"]
           args: ["app.js"]
+          env:
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: frontend_secret
+                  key: DISCORD_TOKEN
+            - name: TEST_GUILD_ID
+              valueFrom:
+                secretKeyRef:
+                  name: frontend_secret
+                  key: TEST_GUILD_ID
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: frontend_secret
+                  key: CLIENT_ID
+            - name: ENVIRONMENT
+              value: "${ENVIRONMENT}"
           resources:
             limits:
               cpu: "0.5"
