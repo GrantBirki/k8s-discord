@@ -28,5 +28,3 @@ spec:
             requests:
               cpu: "0.25"
               memory: "50Mi"
-          ports:
-            - containerPort: 80
