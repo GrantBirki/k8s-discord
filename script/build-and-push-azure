@@ -17,12 +17,10 @@ az acr login -n $ACR_NAME
 
 echo "✅ Successfully logged into ACR"
 
-cd $REPO_DIR/src/frontend
-docker build -t $ACR_NAME.azurecr.io/frontend:test .
+docker build -t $ACR_NAME.azurecr.io/frontend:test $REPO_DIR/src/frontend
 docker push $ACR_NAME.azurecr.io/frontend:test
 echo "✅ Successfully pushed the frontend image"
 
-cd $REPO_DIR/src/backend
-docker build -t $ACR_NAME.azurecr.io/backend:test .
+docker build -t $ACR_NAME.azurecr.io/backend:test $REPO_DIR/src/backend
 docker push $ACR_NAME.azurecr.io/backend:test
 echo "✅ Successfully pushed the backend image"
