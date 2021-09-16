@@ -22,4 +22,4 @@ jobs:
           reporter: github-pr-review # Change reviewdog reporter
           filter_mode: nofilter
           fail_on_error: true # Fail action if errors are found
-          tfsec_flags: "-e AZU009"
+          tfsec_flags: "-e AZU009,AZU008"
