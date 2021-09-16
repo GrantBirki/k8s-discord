@@ -109,7 +109,7 @@ jobs:
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest frontend
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest backend
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:backend
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
 
   terraform-k8s-cluster:
     # This is the k8s-cluster itself and the other resources that the k8s resources depend on
@@ -202,7 +202,7 @@ jobs:
 
   terraform-k8s:
     # These are the resources that run on the k8s-cluster
-    needs: [changes, build]
+    needs: [changes, build, terraform-k8s-cluster]
     if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
 
     runs-on: ubuntu-latest
