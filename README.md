@@ -31,6 +31,7 @@ A distributed Discord bot using Slash commands in Kubernetes!
 
 You will need a few things to use this project:
 
+1. Fork me! 🍴
 1. An [Azure](https://azure.microsoft.com/en-us/free/) account (this project uses AKS)
 1. [tfenv](https://github.com/tfutils/tfenv) (for managing Terraform versions)
 1. [kubectl](https://kubernetes.io/docs/tasks/tools/) (for applying K8s manifests)
