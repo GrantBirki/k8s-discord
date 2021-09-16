@@ -1,12 +1,18 @@
 <h1 align="center">k8s-discord</h1>
 <h1 align="center">
-    <img src="docs/assets/k8s.png" alt="errbot" align="center" width="64px"/>
-    <img src="docs/assets/discord.svg" alt="errbot" align="center" width="64px"/>
-    <img src="docs/assets/terraform.png" alt="errbot" align="center" width="64px"/>
+    <img src="docs/assets/k8s.png" alt="k8s" align="center" width="64px"/>
+    <img src="docs/assets/discord.svg" alt="discord" align="center" width="64px"/>
+    <img src="docs/assets/terraform.png" alt="terraform" align="center" width="64px"/>
 </h1>
 
 <p align="center">
   Create a K8s cluster running a Discord bot using pure Terraform
+</p>
+
+<p align="center">
+  <a href="https://github.com/GrantBirki/k8s-discord/actions/workflows/deployment.yml"><img src="https://github.com/GrantBirki/k8s-discord/actions/workflows/deployment.yml/badge.svg?event=push" alt="deployment" height="18"></a>
+  <a href="https://github.com/GrantBirki/k8s-discord/actions/workflows/review.yml"><img src="https://github.com/GrantBirki/k8s-discord/actions/workflows/review.yml/badge.svg?event=push" alt="review"/></a>
+  <a href="https://github.com/GrantBirki/k8s-discord/actions/workflows/tfsec.yml"><img src="https://github.com/GrantBirki/k8s-discord/actions/workflows/tfsec.yml/badge.svg?event=push" alt="tfsec"/></a>
 </p>
 
 <hr>
