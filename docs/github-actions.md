@@ -68,3 +68,27 @@ This part is important for CI/CD to pass! You will need to configure the followi
   - Value: `<base64_encoded_token>`
 
   > This is your Discord bot token. It MUST be `base64` encoded since it is injected as a native Kubernetes secret
+
+  - Azure CLIENT_ID
+    - Key: `CLIENT_ID`
+    - Value: `<clientId>`
+
+    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
+
+  - Azure CLIENT_SECRET
+    - Key: `CLIENT_SECRET`
+    - Value: `<clientSecret>`
+
+    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
+
+  - Azure TENANT_ID
+    - Key: `TENANT_ID`
+    - Value: `<tenantId>`
+
+    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
+
+  - Azure SUBSCRIPTION_ID
+    - Key: `SUBSCRIPTION_ID`
+    - Value: `<subscriptionId>`
+
+    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
