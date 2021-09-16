@@ -9,7 +9,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # Th
 REPO_DIR="$(dirname "$SCRIPT_DIR")" # The root directory of this repository
 ACR_NAME="birkik8sacr"
 
-echo "🔨 Let's build a some images and push them"
+echo "🔨 Let's build some images and push them"
 
 echo "🔃 Logging into Azure ACR: $ACR_NAME"
 

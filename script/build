@@ -77,6 +77,28 @@ az aks get-credentials --resource-group $RESOURCE_GROUP_NAME --name $K8S_CLUSTER
 
 cd $REPO_DIR
 
+echo "🔨 Time to build and push our images to ACR so they may be used by AKS"
+
+push_to_acr () {
+  echo "🚀 Building and Pushing to ACR..."
+  $REPO_DIR/script/build-and-push-azure
+}
+
+# Push images to ACR
+set +e
+while true
+do
+  push_to_acr
+  if [ $? -ne 0 ]; then
+    echo "💡 Failed to push to ACR. Trying again... Hint: press 'ctrl+c' to abort the retry loop"
+    sleep 5
+  else
+    echo "✅ Successfully pushed images to AKS"
+    break
+  fi
+done
+set -e # Prevent any kind of script failures
+
 echo "🔨 Time to build K8s resources and apply their manifests on the cluster!"
 
 k8s_success () {
