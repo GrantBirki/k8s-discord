@@ -9,6 +9,10 @@ Note: Due to race conditions, it is advisable (but not 100% required) to run the
 Terraform:
 
 - Your **two** Terraform workspaces have been configured - [Terraform Docs](terraform-cloud.md)
+- An Azure Service Principal for deploying your Terraform changes - [Azure Docs](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli)
+- Your Azure Service Principal will need permissions to read from Azure AD ([source](https://gaunacode.com/azure-ad-permissions-to-read-service-principals)):
+  - Go to Azure AD -> Roles and Administrators -> select Directory Readers
+  - Search for your Service Principal by using the `client_id` and assign it the `Directory Readers` role. Done!
 
 GitHub Secrets:
 
