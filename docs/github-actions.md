@@ -70,7 +70,7 @@ This part is important for CI/CD to pass! You will need to configure the followi
   - Key: `AZURE_PASSWORD`
   - Value: `<password>`
 
-> Note: This value is created and displayed from the command run during the main prerequisites `az ad sp create-for-rbac --skip-assignment`
+  > Note: This value is created and displayed from the command run during the main prerequisites `az ad sp create-for-rbac --skip-assignment`
 
 - Discord Token
   - Key: `DISCORD_TOKEN`
