@@ -6,7 +6,7 @@ metadata:
   labels:
     name: backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       name: backend
