@@ -17,7 +17,7 @@
 
 <hr>
 
-## What you will create ⭐
+## What You Will Create ⭐
 
 A distributed Discord bot using Slash commands in Kubernetes!
 
