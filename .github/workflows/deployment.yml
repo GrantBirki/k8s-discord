@@ -225,6 +225,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+        id: setcontext
+
       - uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 1.0.6
