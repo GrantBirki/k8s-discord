@@ -158,6 +158,11 @@ jobs:
           # Creds
           TF_VAR_appId: ${{ secrets.AZURE_APP_ID }}
           TF_VAR_password: ${{ secrets.AZURE_PASSWORD }}
+          # Azure Auth
+          TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          TF_VAR_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          TF_VAR_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: terraform plan -no-color
         continue-on-error: true
 
@@ -198,6 +203,11 @@ jobs:
           # Creds
           TF_VAR_appId: ${{ secrets.AZURE_APP_ID }}
           TF_VAR_password: ${{ secrets.AZURE_PASSWORD }}
+          # Azure Auth
+          TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          TF_VAR_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          TF_VAR_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: terraform apply -auto-approve
 
   terraform-k8s:
@@ -248,6 +258,11 @@ jobs:
           TF_VAR_IMAGE_TAG: latest
           # Creds
           TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          # Azure Auth
+          TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          TF_VAR_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          TF_VAR_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: terraform plan -no-color
         continue-on-error: true
 
@@ -287,6 +302,11 @@ jobs:
           TF_VAR_IMAGE_TAG: latest
           # Creds
           TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          # Azure Auth
+          TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          TF_VAR_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          TF_VAR_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: terraform apply -auto-approve
 
       # Add me later to get Discord push notifications on deployment! 😊
