@@ -78,32 +78,32 @@ This part is important for CI/CD to pass! You will need to configure the followi
 
   > This is your Discord bot token. It MUST be `base64` encoded since it is injected as a native Kubernetes secret
 
-  - Azure CLIENT_ID
-    - Key: `CLIENT_ID`
-    - Value: `<clientId>`
+- Azure CLIENT_ID
+  - Key: `CLIENT_ID`
+  - Value: `<clientId>`
 
-    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
+  > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
 
-  - Azure CLIENT_SECRET
-    - Key: `CLIENT_SECRET`
-    - Value: `<clientSecret>`
+- Azure CLIENT_SECRET
+  - Key: `CLIENT_SECRET`
+  - Value: `<clientSecret>`
 
-    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
+  > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
 
-  - Azure TENANT_ID
-    - Key: `TENANT_ID`
-    - Value: `<tenantId>`
+- Azure TENANT_ID
+  - Key: `TENANT_ID`
+  - Value: `<tenantId>`
 
-    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
+  > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
 
-  - Azure SUBSCRIPTION_ID
-    - Key: `SUBSCRIPTION_ID`
-    - Value: `<subscriptionId>`
+- Azure SUBSCRIPTION_ID
+  - Key: `SUBSCRIPTION_ID`
+  - Value: `<subscriptionId>`
 
-    > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
+  > See the [docs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/azure_cli) for more info
 
-  - kubectl config file 💡
-    - Key: `KUBE_CONFIG`
-    - Value: `<raw_kubectl_config_file_contents>`
+- kubectl config file 💡
+  - Key: `KUBE_CONFIG`
+  - Value: `<raw_kubectl_config_file_contents>`
 
-    > See the [docs](https://github.com/marketplace/actions/kubernetes-set-context) for more info. Note: This token is needed in the `terraform/k8s` job. However, you can only get the contents of the kubeconfig file from the `terraform/k8s` job once it has been deployed. This is a chicken and egg situation and therefore, it is advisable to run `make build` to get the cluster spun up before managing your cluster with GitHub Actions (CI). If you need to get the contents of the kubeconfig file, you can run `script/kubectl-config` and then check the contents of `~/.kube/config`. If any Terraform changes take place which destroy the cluster, you will need to grab your kubeconfig file again and apply it as a secret.. again
+  > See the [docs](https://github.com/marketplace/actions/kubernetes-set-context) for more info. Note: This token is needed in the `terraform/k8s` job. However, you can only get the contents of the kubeconfig file from the `terraform/k8s` job once it has been deployed. This is a chicken and egg situation and therefore, it is advisable to run `make build` to get the cluster spun up before managing your cluster with GitHub Actions (CI). If you need to get the contents of the kubeconfig file, you can run `script/kubectl-config` and then check the contents of `~/.kube/config`. If any Terraform changes take place which destroy the cluster, you will need to grab your kubeconfig file again and apply it as a secret.. again
