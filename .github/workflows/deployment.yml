@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       src: ${{ steps.filter.outputs.src }}
-      terraform: ${{ steps.filter.outputs.terraform }}
+      terraform-k8s-cluster: ${{ steps.filter.outputs.terraform-k8s-cluster }}
+      terraform-k8s: ${{ steps.filter.outputs.terraform-k8s }}
     steps:
     - uses: actions/checkout@v2
     - uses: dorny/paths-filter@v2
@@ -22,13 +23,15 @@ jobs:
         filters: |
           src:
             - 'src/**'
-          terraform:
-            - 'terraform/**'
+          terraform-k8s-cluster:
+            - 'terraform/k8s-cluster/**'
+          terraform-k8s:
+            - 'terraform/k8s/**'
 
   test:
 
       needs: changes
-      if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform == 'true'
+      if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
 
       runs-on: ubuntu-latest
 
@@ -65,7 +68,7 @@ jobs:
   build:
 
     needs: [changes, test]
-    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform == 'true'
+    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
 
     runs-on: ubuntu-latest
 
@@ -108,10 +111,10 @@ jobs:
           docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest backend
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:backend
 
-  terraform:
-
+  terraform-k8s-cluster:
+    # This is the k8s-cluster itself and the other resources that the k8s resources depend on
     needs: [changes, build]
-    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform == 'true'
+    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
 
     runs-on: ubuntu-latest
 
@@ -132,31 +135,118 @@ jobs:
         run: terraform --version
 
       - name: Terraform fmt
-        working-directory: terraform
+        working-directory: terraform/k8s-cluster
         id: fmt
         run: terraform fmt -check
         continue-on-error: true
 
       - name: Terraform Init
-        working-directory: terraform
+        working-directory: terraform/k8s-cluster
         id: init
         run: terraform init
 
       - name: Terraform Validate
-        working-directory: terraform
+        working-directory: terraform/k8s-cluster
         id: validate
         run: terraform validate -no-color
 
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
-        working-directory: terraform
+        working-directory: terraform/k8s-cluster
+        id: plan
+        env:
+          # Creds
+          TF_VAR_appId: ${{ secrets.AZURE_APP_ID }}
+          TF_VAR_password: ${{ secrets.AZURE_PASSWORD }}
+        run: terraform plan -no-color
+        continue-on-error: true
+
+      - uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `## Terraform Plan 🪐
+            - Terraform Format and Style 🖌: \`${{ steps.fmt.outcome }}\`
+            - Terraform Initialization ⚙️: \`${{ steps.init.outcome }}\`
+            - Terraform Validation 🤖: ${{ steps.validate.outputs.stdout }}
+            - Terraform Plan 📖: \`${{ steps.plan.outcome }}\`
+            
+            <details><summary><b>Show Plan</b></summary>
+            
+            \`\`\`${process.env.PLAN}\`\`\`
+            
+            </details>
+            
+            > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/k8s-cluster\`, Workflow: \`${{ github.workflow }}\``;
+              
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform apply
+        if: github.event_name == 'push'
+        working-directory: terraform/k8s-cluster
+        env:
+          # Config
+          TF_VAR_IMAGE_TAG: latest
+          # Creds
+          TF_VAR_appId: ${{ secrets.AZURE_APP_ID }}
+          TF_VAR_password: ${{ secrets.AZURE_PASSWORD }}
+        run: terraform apply -auto-approve
+
+  terraform-k8s:
+    # These are the resources that run on the k8s-cluster
+    needs: [changes, build]
+    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.6
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Terraform version
+        run: terraform --version
+
+      - name: Terraform fmt
+        working-directory: terraform/k8s
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        working-directory: terraform/k8s
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: terraform/k8s
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        if: github.event_name == 'pull_request'
+        working-directory: terraform/k8s
         id: plan
         env:
           # Config
-          TF_VAR_IMAGE_TAG: ci-test
+          TF_VAR_IMAGE_TAG: latest
           # Creds
-          TF_VAR_AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
-          TF_VAR_AZURE_PASSWORD: ${{ secrets.AZURE_PASSWORD }}
           TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: terraform plan -no-color
         continue-on-error: true
@@ -180,7 +270,7 @@ jobs:
             
             </details>
             
-            > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform\`, Workflow: \`${{ github.workflow }}\``;
+            > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/k8s\`, Workflow: \`${{ github.workflow }}\``;
               
             github.issues.createComment({
               issue_number: context.issue.number,
@@ -191,13 +281,11 @@ jobs:
 
       - name: Terraform apply
         if: github.event_name == 'push'
-        working-directory: terraform
+        working-directory: terraform/k8s
         env:
           # Config
           TF_VAR_IMAGE_TAG: latest
           # Creds
-          TF_VAR_AZURE_APP_ID: ${{ secrets.AZURE_APP_ID }}
-          TF_VAR_AZURE_PASSWORD: ${{ secrets.AZURE_PASSWORD }}
           TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: terraform apply -auto-approve
 
