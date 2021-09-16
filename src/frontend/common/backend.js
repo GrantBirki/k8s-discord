@@ -1,3 +1,4 @@
+// Common function to create a backend URL for the frontend to use
 async function create_url({protocol = 'http', host = null, path = null, port = 80}) {
 
     // Check that the path starts with a "/"
