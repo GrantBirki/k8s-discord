@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# Usage: uncomment 2,4 bla.conf
-
-sed -i "$1"' s/^#//' "$2"
