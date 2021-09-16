@@ -15,11 +15,3 @@ terraform {
     }
   }
 }
-
-provider "kubectl" {
-  host                   = data.azurerm_kubernetes_cluster.cluster.kube_config.0.host
-  cluster_ca_certificate = base64decode(data.azurerm_kubernetes_cluster.cluster.kube_config.0.cluster_ca_certificate)
-  token                  = data.azurerm_kubernetes_cluster.cluster.kube_config.0.password
-  load_config_file       = true
-  apply_retry_count      = 3
-}

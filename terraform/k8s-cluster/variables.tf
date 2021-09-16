@@ -7,7 +7,7 @@ variable "project_name" {
   type        = string
 }
 
- # You must pass in the IPs you wish to allow as a variable
+# You must pass in the IPs you wish to allow as a variable
 # variable "allowed_ip_list" {
 #   description = "The list of IP addresses that are allowed to access the cluster's management API"
 #   type = list(string) # The value is a list of strings
@@ -28,8 +28,8 @@ variable "vm_size" {
 
 variable "cloud_location" {
   description = "Location/Region for the cloud provider to deploy your cluster in"
-  default = "West US 2"
-  type = string
+  default     = "West US 2"
+  type        = string
 }
 
 variable "node_disk_size_gb" {
@@ -44,4 +44,21 @@ variable "appId" {
 
 variable "password" {
   description = "Azure Kubernetes Service Cluster password"
+}
+
+# Azure Creds
+variable "CLIENT_SECRET" {
+  type = string
+}
+
+variable "CLIENT_ID" {
+  type = string
+}
+
+variable "TENANT_ID" {
+  type = string
+}
+
+variable "SUBSCRIPTION_ID" {
+  type = string
 }
