@@ -11,6 +11,6 @@ module.exports = {
     // The function to execute when the slash command is called (calls our backend)
     async execute(interaction) {
         // Sends a reply to the Slash command which triggered this function
-        interaction.reply({ content: "pong" });
+        interaction.reply({ content: "pong!" });
     }
 };
