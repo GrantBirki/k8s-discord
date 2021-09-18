@@ -23,7 +23,8 @@ jobs:
       name: diff against the base branch latest commit for specific paths
       # $CLUSTER_UP is a secret that can either be "true" or "false"
       run: |
-        [ "$CLUSTER_UP" == "true" ] && echo "::set-output name=cluster_is_up::true"
+        echo "CLUSTER_UP: $CLUSTER_UP"
+        [ "$CLUSTER_UP" == "true" ] && echo "::set-output name=cluster_is_up::true" || echo "::set-output name=cluster_is_up::false"
 
   changes:
     needs: cluster-check
