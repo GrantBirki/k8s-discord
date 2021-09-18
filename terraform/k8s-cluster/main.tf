@@ -4,8 +4,8 @@ provider "azurerm" {
   # Ignore Auth Warnings
   skip_provider_registration = true
 
-  client_secret   = var.CLIENT_SECRET
   client_id       = var.CLIENT_ID
+  client_secret   = var.CLIENT_SECRET
   tenant_id       = var.TENANT_ID
   subscription_id = var.SUBSCRIPTION_ID
 }
@@ -34,8 +34,8 @@ resource "azurerm_kubernetes_cluster" "default" {
   }
 
   service_principal {
-    client_id     = var.appId
-    client_secret = var.password
+    client_id     = var.CLIENT_ID
+    client_secret = var.CLIENT_SECRET
   }
 
   role_based_access_control {
@@ -50,7 +50,7 @@ resource "azurerm_kubernetes_cluster" "default" {
 # Attach the K8s cluster to ACR
 
 data "azuread_service_principal" "aks_principal" {
-  application_id = var.appId
+  application_id = var.CLIENT_ID
 }
 
 resource "azurerm_role_assignment" "acrpull_role" {

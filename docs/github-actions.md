@@ -9,10 +9,16 @@ Note: Due to race conditions, it is advisable (but not 100% required) to run the
 Terraform:
 
 - Your **two** Terraform workspaces have been configured - [Terraform Docs](terraform-cloud.md)
-- An Azure Service Principal for deploying your Terraform changes - [Azure Docs](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli)
-- Your Azure Service Principal will need permissions to read from Azure AD ([source](https://gaunacode.com/azure-ad-permissions-to-read-service-principals)):
-  - Go to Azure AD -> Roles and Administrators -> select Directory Readers
-  - Search for your Service Principal by using the `client_id` and assign it the `Directory Readers` role. Done!
+
+Azure:
+
+- An Azure Service Principal for deploying your Terraform changes
+- Your Azure Service Principal will need `owner` permissions to your Azure Subscription. This is due to K8s needing to bind your ACR registiry to your K8s cluster with pull permissions
+
+Here are two great documents to create an Azure Service Principal and assign permissions to it:
+
+1. [Create a Service Principal](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
+1. [Assign Roles to a Service Principal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current)
 
 GitHub Secrets:
 
@@ -40,37 +46,25 @@ This part is important for CI/CD to pass! You will need to configure the followi
   > This is essentially a variable for the `deployment.yml` action and is not *really* a secret
   > Note: The ACR registry server domain is needed for the `build` job of the CI pipeline and also later Terraform jobs. This is a chicken and egg situation and therefore, it is advisable to run `make build` to get the cluster spun up before managing your cluster with GitHub Actions (CI).
 
-- ACR Registry Username
+- ACR Registry Username 💡
   - Key: `REGISTRY_USERNAME`
   - Value: `<username>`
 
   > See the [docs](https://github.com/marketplace/actions/azure-container-registry-login) for more info.
-  > See `ACR Registry Server 💡` above
+  > See `ACR Registry Server` above
 
-- ACR Registry Password
+- ACR Registry Password 💡
   - Key: `REGISTRY_PASSWORD`
   - Value: `<password>`
 
   > See the [docs](https://github.com/marketplace/actions/azure-container-registry-login) for more info
-  > See `ACR Registry Server 💡` above
+  > See `ACR Registry Server` above
 
 - Terraform API Token
   - Key: `TF_API_TOKEN`
   - Value: `<terraform api key>`
 
   > See the [docs](https://www.terraform.io/docs/cloud/users-teams-organizations/api-tokens.html) for more info
-
-- Azure RBAC appId
-  - Key: `AZURE_APP_ID`
-  - Value: `<appId>`
-
-  > Note: This value is created and displayed from the command run during the main prerequisites `az ad sp create-for-rbac --skip-assignment`
-
-- Azure RBAC Password
-  - Key: `AZURE_PASSWORD`
-  - Value: `<password>`
-
-  > Note: This value is created and displayed from the command run during the main prerequisites `az ad sp create-for-rbac --skip-assignment`
 
 - Discord Token
   - Key: `DISCORD_TOKEN`
