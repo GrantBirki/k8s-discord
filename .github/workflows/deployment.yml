@@ -10,9 +10,8 @@ on:
 jobs:
 
   cluster-check:
-    environment: development
     env:
-      CLUSTER_UP: "true"
+      CLUSTER_UP: "false"
     outputs:
       cluster_is_up: ${{ steps.cluster.outputs.cluster_is_up}}
     runs-on: ubuntu-latest
@@ -20,8 +19,8 @@ jobs:
       contents: read
     steps:
     - id: cluster
-      name: check if the cluster is up (using the CLUSTER_UP secret)
-      # $CLUSTER_UP is a secret that can either be "true" or "false"
+      name: check if the cluster is up (using the CLUSTER_UP env var)
+      # $CLUSTER_UP is a env var that can either be "true" or "false"
       run: |
         echo "CLUSTER_UP: $CLUSTER_UP"
         [ "$CLUSTER_UP" == "true" ] && echo "::set-output name=cluster_is_up::true" || echo "::set-output name=cluster_is_up::false"
