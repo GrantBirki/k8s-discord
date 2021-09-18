@@ -9,7 +9,25 @@ on:
 
 jobs:
 
+  cluster-check:
+    env:
+      CLUSTER_UP: ${{ secrets.CLUSTER_UP }}
+    outputs:
+      cluster_is_up: ${{ steps.cluster.outputs.cluster_is_up}}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - id: cluster
+      name: diff against the base branch latest commit for specific paths
+      # $CLUSTER_UP is a secret that can either be "true" or "false"
+      run: |
+        [ "$CLUSTER_UP" == "true" ] && echo "::set-output name=cluster_is_up::true"
+
   changes:
+    needs: cluster-check
+    if: ${{ needs.cluster-check.outputs.cluster_is_up == 'true' }}
+
     runs-on: ubuntu-latest
     outputs:
       src: ${{ steps.filter.outputs.src }}
@@ -67,6 +85,8 @@ jobs:
 
   build:
 
+    environment: development
+
     needs: [changes, test]
     if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
 
@@ -112,6 +132,9 @@ jobs:
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
 
   terraform-k8s-cluster:
+
+    environment: development
+
     # This is the k8s-cluster itself and the other resources that the k8s resources depend on
     needs: [changes, build]
     if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
@@ -211,6 +234,9 @@ jobs:
         run: terraform apply -auto-approve
 
   terraform-k8s:
+
+    environment: development
+
     # These are the resources that run on the k8s-cluster
     needs: [changes, build, terraform-k8s-cluster]
     if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'

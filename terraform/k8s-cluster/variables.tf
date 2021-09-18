@@ -38,14 +38,6 @@ variable "node_disk_size_gb" {
   type        = number
 }
 
-variable "appId" {
-  description = "Azure Kubernetes Service Cluster service principal"
-}
-
-variable "password" {
-  description = "Azure Kubernetes Service Cluster password"
-}
-
 # Azure Creds
 variable "CLIENT_SECRET" {
   type = string
