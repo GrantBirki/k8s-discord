@@ -179,9 +179,6 @@ jobs:
         working-directory: terraform/k8s-cluster
         id: plan
         env:
-          # Creds
-          TF_VAR_appId: ${{ secrets.AZURE_APP_ID }}
-          TF_VAR_password: ${{ secrets.AZURE_PASSWORD }}
           # Azure Auth
           TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
           TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
@@ -224,9 +221,6 @@ jobs:
         env:
           # Config
           TF_VAR_IMAGE_TAG: latest
-          # Creds
-          TF_VAR_appId: ${{ secrets.AZURE_APP_ID }}
-          TF_VAR_password: ${{ secrets.AZURE_PASSWORD }}
           # Azure Auth
           TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
           TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
