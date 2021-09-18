@@ -11,7 +11,7 @@ jobs:
 
   cluster-check:
     env:
-      CLUSTER_UP: "false"
+      CLUSTER_UP: "true" # control whether all the CI should run or not
     outputs:
       cluster_is_up: ${{ steps.cluster.outputs.cluster_is_up}}
     runs-on: ubuntu-latest
