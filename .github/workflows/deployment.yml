@@ -10,6 +10,7 @@ on:
 jobs:
 
   cluster-check:
+    environment: development
     env:
       CLUSTER_UP: ${{ secrets.CLUSTER_UP }}
     outputs:
