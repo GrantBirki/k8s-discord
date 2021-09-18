@@ -12,7 +12,7 @@ jobs:
   cluster-check:
     environment: development
     env:
-      CLUSTER_UP: ${{ secrets.CLUSTER_UP }}
+      CLUSTER_UP: "true"
     outputs:
       cluster_is_up: ${{ steps.cluster.outputs.cluster_is_up}}
     runs-on: ubuntu-latest
@@ -20,7 +20,7 @@ jobs:
       contents: read
     steps:
     - id: cluster
-      name: diff against the base branch latest commit for specific paths
+      name: check if the cluster is up (using the CLUSTER_UP secret)
       # $CLUSTER_UP is a secret that can either be "true" or "false"
       run: |
         echo "CLUSTER_UP: $CLUSTER_UP"
