@@ -142,11 +142,9 @@ jobs:
 
       - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
       - uses: azure/login@77f1b2e3fb80c0e8645114159d17008b8a2e475a # pin@v1
-        if: github.event_name == 'push'
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: 'ACR Login'
-        if: github.event_name == 'push'
+      - name: "ACR Login"
         uses: azure/docker-login@81744f9799e7eaa418697cb168452a2882ae844a # pin@v1
         with:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
