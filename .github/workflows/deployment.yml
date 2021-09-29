@@ -201,7 +201,7 @@ jobs:
 
       - uses: azure/login@77f1b2e3fb80c0e8645114159d17008b8a2e475a # pin@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.DEV_AZURE_CREDENTIALS }}
 
       - uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # pin@v1
         with:
@@ -299,18 +299,27 @@ jobs:
             - Terraform Initialization ⚙️: \`${{ steps.init_k8s_cluster.outcome }}\`
             - Terraform Validation 🤖: \`${{ steps.validate_k8s_cluster.outcome }}\`
             - Terraform Plan 📖: \`${{ steps.plan_k8s_cluster.outcome }}\`
+
             <details><summary><b>Show Plan</b></summary>
+
             \`\`\`${process.env.PLAN_K8S_CLUSTER}\`\`\`
+
             </details>
+
             > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/k8s-cluster\`, Workflow: \`${{ github.workflow }}\`
+
             ### Terraform Plan - \`k8s\` 🪐
             - Terraform Format and Style 🖌: \`${{ steps.fmt_k8s.outcome }}\`
             - Terraform Initialization ⚙️: \`${{ steps.init_k8s.outcome }}\`
             - Terraform Validation 🤖: \`${{ steps.validate_k8s.outcome }}\`
             - Terraform Plan 📖: \`${{ steps.plan_k8s.outcome }}\`
+
             <details><summary><b>Show Plan</b></summary>
+
             \`\`\`${process.env.PLAN_K8S}\`\`\`
+
             </details>
+
             > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/k8s\`, Workflow: \`${{ github.workflow }}\``;
               
             github.issues.createComment({
