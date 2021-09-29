@@ -102,9 +102,6 @@ set -e # Prevent any kind of script failures
 echo "🔨 Time to build K8s resources and apply their manifests on the cluster!"
 
 k8s_success () {
-
-  PROXY_IP=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" service -n kong kong-proxy)
-
   echo -e "✅ All manifests applied successfully\n"
   echo -e "✨ Done! ✨"
 }
