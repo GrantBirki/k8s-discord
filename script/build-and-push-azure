@@ -7,7 +7,12 @@ set -e
 # Global Directory Variables
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # The directory of this script
 REPO_DIR="$(dirname "$SCRIPT_DIR")" # The root directory of this repository
-ACR_NAME="birkik8sacr"
+ACR_NAME="example" # Set a static registry name here if you want
+
+if [ "$ACR_NAME" = "example" ]; then
+  echo "ℹ️ Please set your ACR_NAME (examplek8sacr)";
+  read -p "ACR Name: " ACR_NAME
+fi
 
 echo "🔨 Let's build some images and push them"
 

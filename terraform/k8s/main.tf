@@ -4,6 +4,9 @@ module "backend" {
   # Environment variables
   IMAGE_TAG   = var.IMAGE_TAG
   ENVIRONMENT = var.ENVIRONMENT
+
+  # Config
+  ACR_NAME = data.azurerm_container_registry.acr.name
 }
 
 module "frontend" {
@@ -14,4 +17,7 @@ module "frontend" {
   # Environment variables
   IMAGE_TAG   = var.IMAGE_TAG
   ENVIRONMENT = var.ENVIRONMENT
+
+  # Config
+  ACR_NAME = data.azurerm_container_registry.acr.name
 }
