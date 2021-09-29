@@ -40,13 +40,13 @@ You will need a few things to use this project:
     - See the [`terraform-cloud`](docs/terraform-cloud.md) docs in this repo for more info (required if you are using Terraform Cloud)
 1. An Azure Service Principal for deploying your Terraform changes - [Create a Service Principal](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
 1. Your Azure Service Principal will need `owner` permissions to your Azure Subscription. This is due to K8s needing to bind your ACR registiry to your K8s cluster with pull permissions - [Assign Roles to a Service Principal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current)
-1. You will need to skim through the following files and edit the lines with comments:
+1. You will need to skim through the following files and edit the lines with "`(CHANGE ME)`" comments:
     - [`terraform\k8s-cluster\versions.tf`](terraform\k8s-cluster\versions.tf)
     - [`terraform\k8s-cluster\variables.tf`](terraform\k8s-cluster\variables.tf)
     - [`terraform\k8s\k8s-cluster.tf`](terraform\k8s\k8s-cluster.tf)
 
     > Example: Updating values with your own unique K8s cluster name and pointing to your own Terraform cloud workspaces
-1. A Discord bot with Slash command permissions set and a token - [Discord Documentation](https://discord.com/developers/docs/interactions/application-commands)
+1. A Discord bot with Slash command permissions set and a token + client id - [Discord Documentation](https://discord.com/developers/docs/interactions/application-commands)
 
 ## Usage 💻
 

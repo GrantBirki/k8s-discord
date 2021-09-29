@@ -2,9 +2,9 @@ data "terraform_remote_state" "k8s_cluster" {
   backend = "remote"
 
   config = {
-    organization = "birki-io" # Change this to your organization
+    organization = "birki-io" # Change this to your organization (CHANGE ME)
     workspaces = {
-      name = "k8s-cluster-testing" # Change this to your own workspace name pointing to your k8s-cluster TF remote
+      name = "k8s-cluster-testing" # Change this to your own workspace name pointing to your k8s-cluster TF remote (CHANGE ME)
     }
   }
 }
