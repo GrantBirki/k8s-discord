@@ -20,6 +20,10 @@ Here are two great documents to create an Azure Service Principal and assign per
 1. [Create a Service Principal](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
 1. [Assign Roles to a Service Principal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current)
 
+GitHub Environment:
+
+This workflow assumes that an empty environment named `development` has been created in your GitHub repository
+
 GitHub Secrets:
 
 This part is important for CI/CD to pass! You will need to configure the following GitHub secrets as `key` / `value` pairs.
