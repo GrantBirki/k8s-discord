@@ -70,7 +70,17 @@ $ make build
 ✨ Done! ✨
 ```
 
-If all went as planned you should now have a very simple Discord bot that can respond to Slash commands!
+Now that your bot is up and running in Kubernetes, you will need to [register](https://discordjs.guide/interactions/registering-slash-commands.html#guild-commands) your Slash commands. To make this easy, I added a helper script which does this for you. It relies on the correct `src/frontend/.env` file being setup with your Discord `CLIENT_ID` and `DISCORD_TOKEN`. Below is an example of me registering my commands for my test Guild:
+
+```console
+$ make register
+Started refreshing application (/) commands.
+Successfully registered application commands for development guild
+Successfully reloaded application (/) commands.
+[#] Registered all slash commands in the src/frontend/commands folder!
+```
+
+If all went as planned you should now have a very simple Discord bot running that can respond to (now registered) Slash commands!
 
 You can use either of the commands to test:
 
