@@ -5,7 +5,6 @@ on:
     branches:
       - main
   pull_request:
-    branches: [ main ]
 
 jobs:
 
@@ -31,12 +30,15 @@ jobs:
 
     runs-on: ubuntu-latest
     outputs:
-      src: ${{ steps.filter.outputs.src }}
-      terraform-k8s-cluster: ${{ steps.filter.outputs.terraform-k8s-cluster }}
-      terraform-k8s: ${{ steps.filter.outputs.terraform-k8s }}
+      src: ${{ steps.filter.outputs.src }} # Used to calculate general changes to source code
+      terraform-k8s-cluster: ${{ steps.filter.outputs.terraform-k8s-cluster }} # changes to the k8s cluster
+      terraform-k8s: ${{ steps.filter.outputs.terraform-k8s }} # changes to k8s workloads
+      discord-commands: ${{ steps.filter.outputs.discord-commands }} # changes to the discord commands
+      backend-src: ${{ steps.filter.outputs.backend-src }} # changes to the backend source code
+      frontend-src: ${{ steps.filter.outputs.frontend-src }} # changes to the frontend source code
     steps:
-    - uses: actions/checkout@v2
-    - uses: dorny/paths-filter@v2
+    - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
+    - uses: dorny/paths-filter@b2feaf19c27470162a626bd6fa8438ae5b263721 # pin@v2
       id: filter
       with:
         filters: |
@@ -46,6 +48,57 @@ jobs:
             - 'terraform/k8s-cluster/**'
           terraform-k8s:
             - 'terraform/k8s/**'
+          discord-commands:
+            - 'src/frontend/commands/**'
+          backend-src:
+            - 'src/backend/**'
+          frontend-src:
+            - 'src/frontend/**'
+
+  # For setting global vars to use in other steps
+  # Note: Anywhere you want to use the outputs, you need to use the "needs: vars" yaml tag
+  # About: backend/frontend tags: this job checks to see if changes have been made to the source code for the frontend and backend
+  # .. services. If changes have been made, new image tags are generated. This get pushed to our registry and applied to k8s in the terraform deployment
+  # .. If no changes are made then it pulls the current image tags from the terraform state so a deployment is not triggered.
+  vars:
+    needs: changes
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.vars.outputs.short_sha  }}
+      frontend_tag: ${{ steps.vars.outputs.frontend_tag  }}
+      backend_tag: ${{ steps.vars.outputs.backend_tag  }}
+    steps:
+      - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
+      - uses: azure/login@77f1b2e3fb80c0e8645114159d17008b8a2e475a # pin@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # pin@v1
+        with:
+          terraform_version: 1.0.6
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Terraform init (k8s)
+        working-directory: terraform/k8s
+        run: terraform init
+      - name: Set outputs
+        env: 
+          GH_SHA_FULL: ${{ github.sha }}
+        id: vars
+        run: |
+          export SHORT_SHA=$(echo "$GH_SHA_FULL" | cut -c1-8)
+          if [ "${{ needs.changes.outputs.frontend-src }}" == "true" ]; \
+          then echo "::set-output name=frontend_tag::$SHORT_SHA"; \
+          else echo "::set-output name=frontend_tag::$(.github/ci/current_tag frontend)"; \
+          fi
+          if [ "${{ needs.changes.outputs.backend-src }}" == "true" ]; \
+          then echo "::set-output name=backend_tag::$SHORT_SHA"; \
+          else echo "::set-output name=backend_tag::$(.github/ci/current_tag backend)"; \
+          fi
+          echo "::set-output name=short_sha::$SHORT_SHA"
+      - name: Exported image_tag variables
+        run: |
+          echo "short_sha: ${{ steps.vars.outputs.short_sha}}"
+          echo "frontend_tag: ${{ steps.vars.outputs.frontend_tag}}"
+          echo "backend_tag: ${{ steps.vars.outputs.backend_tag}}"
 
   test:
 
@@ -55,14 +108,14 @@ jobs:
       runs-on: ubuntu-latest
 
       steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
 
       - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6 # pin@v2
         with:
           python-version: 3.9
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353 # pin@v2
         id: cache
         with:
           path: ~/.cache/pip
@@ -78,31 +131,23 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: python vuln check
-        working-directory: src/backend
-        run: |
-          pip install safety
-          safety check
-
   build:
 
-    environment: development
-
-    needs: [changes, test]
+    needs: [changes, test, vars]
     if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
 
     runs-on: ubuntu-latest
 
     steps:
 
-      - uses: actions/checkout@v2
-      - uses: azure/login@v1
+      - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
+      - uses: azure/login@77f1b2e3fb80c0e8645114159d17008b8a2e475a # pin@v1
         if: github.event_name == 'push'
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: 'ACR Login'
         if: github.event_name == 'push'
-        uses: azure/docker-login@v1
+        uses: azure/docker-login@81744f9799e7eaa418697cb168452a2882ae844a # pin@v1
         with:
           login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
           username: ${{ secrets.REGISTRY_USERNAME }}
@@ -111,46 +156,56 @@ jobs:
       # In this step, this action saves a list of existing images,
       # the cache is created without them in the post run.
       # It also restores the cache if it exists.
-      - uses: satackey/action-docker-layer-caching@v0.0.11
+      - uses: satackey/action-docker-layer-caching@46d2c640b1d8ef50d185452ad6fb324e6bd1d052 # pin@v0.0.11
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
       
-      # This job just ensures the images are built properly. In the future it will ensure they run properly as well
-      - name: 'Build image - ci-test'
+      # Builds and pushes images on pull request workflows
+      - name: "Build image - On Pull Request"
         if: github.event_name == 'pull_request'
         working-directory: src
+        env:
+          BACKEND_TAG: ${{ needs.vars.outputs.backend_tag  }}
+          FRONTEND_TAG: ${{ needs.vars.outputs.frontend_tag  }}
         run: |
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:ci-test frontend
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:ci-test backend
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:$FRONTEND_TAG frontend
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:$BACKEND_TAG backend
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:$FRONTEND_TAG
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:$BACKEND_TAG
 
-      - name: 'Build and Push image - latest'
+      # Builds and pushes images on push workflows
+      - name: "Build and Push image - On Push"
         if: github.event_name == 'push'
         working-directory: src
+        env:
+          BACKEND_TAG: ${{ needs.vars.outputs.backend_tag  }}
+          FRONTEND_TAG: ${{ needs.vars.outputs.frontend_tag  }}
         run: |
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest frontend
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
-          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest backend
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:$FRONTEND_TAG frontend
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:$FRONTEND_TAG
+          docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:$BACKEND_TAG backend
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:$BACKEND_TAG
 
-  terraform-k8s-cluster:
-
-    environment: development
-
-    # This is the k8s-cluster itself and the other resources that the k8s resources depend on
-    needs: [changes, build]
-    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
+# Runs a Terraform plan for the k8s-cluster and k8s workloads
+  terraform-plan:
+    permissions:
+      pull-requests: write
+    needs: [changes, build, vars]
+    if:
+      needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s
+      == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
 
     runs-on: ubuntu-latest
 
     steps:
+      # Setup
+      - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
 
-      - uses: actions/checkout@v2
-
-      - uses: azure/login@v1
+      - uses: azure/login@77f1b2e3fb80c0e8645114159d17008b8a2e475a # pin@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # pin@v1
         with:
           terraform_version: 1.0.6
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
@@ -158,26 +213,34 @@ jobs:
       - name: Terraform version
         run: terraform --version
 
-      - name: Terraform fmt
+      # Set the Kube Config for the environment. This assumes the k8s-cluster is up
+      - uses: azure/k8s-set-context@2f6bfda1e23e1a8cdfcfabc5c9e8894eec34734f # pin@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+        id: setcontext
+
+      # Terraform k8s-cluster
+      - name: Terraform fmt (k8s-cluster)
         working-directory: terraform/k8s-cluster
-        id: fmt
+        id: fmt_k8s_cluster
         run: terraform fmt -check
         continue-on-error: true
 
-      - name: Terraform Init
+      - name: Terraform init (k8s-cluster)
         working-directory: terraform/k8s-cluster
-        id: init
+        id: init_k8s_cluster
         run: terraform init
 
-      - name: Terraform Validate
+      - name: Terraform validate (k8s-cluster)
         working-directory: terraform/k8s-cluster
-        id: validate
+        id: validate_k8s_cluster
         run: terraform validate -no-color
 
-      - name: Terraform Plan
+      - name: Terraform plan (k8s-cluster)
         if: github.event_name == 'pull_request'
         working-directory: terraform/k8s-cluster
-        id: plan
+        id: plan_k8s_cluster
         env:
           # Azure Auth
           TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
@@ -187,102 +250,32 @@ jobs:
         run: terraform plan -no-color
         continue-on-error: true
 
-      - uses: actions/github-script@0.9.0
-        if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `## Terraform Plan 🪐
-            - Terraform Format and Style 🖌: \`${{ steps.fmt.outcome }}\`
-            - Terraform Initialization ⚙️: \`${{ steps.init.outcome }}\`
-            - Terraform Validation 🤖: ${{ steps.validate.outputs.stdout }}
-            - Terraform Plan 📖: \`${{ steps.plan.outcome }}\`
-            
-            <details><summary><b>Show Plan</b></summary>
-            
-            \`\`\`${process.env.PLAN}\`\`\`
-            
-            </details>
-            
-            > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/k8s-cluster\`, Workflow: \`${{ github.workflow }}\``;
-              
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-
-      - name: Terraform apply
-        if: github.event_name == 'push'
-        working-directory: terraform/k8s-cluster
-        env:
-          # Config
-          TF_VAR_IMAGE_TAG: latest
-          # Azure Auth
-          TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          TF_VAR_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
-          TF_VAR_TENANT_ID: ${{ secrets.TENANT_ID }}
-        run: terraform apply -auto-approve
-
-  terraform-k8s:
-
-    environment: development
-
-    # These are the resources that run on the k8s-cluster
-    needs: [changes, build, terraform-k8s-cluster]
-    if: needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - uses: actions/checkout@v2
-
-      - uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - uses: azure/k8s-set-context@v1
-        with:
-          method: kubeconfig
-          kubeconfig: ${{ secrets.KUBE_CONFIG }}
-        id: setcontext
-
-      - uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.0.6
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-      - name: Terraform version
-        run: terraform --version
-
-      - name: Terraform fmt
+        # Terraform k8s (resources / workloads)
+      - name: Terraform fmt (k8s)
         working-directory: terraform/k8s
-        id: fmt
+        id: fmt_k8s
         run: terraform fmt -check
         continue-on-error: true
 
-      - name: Terraform Init
+      - name: Terraform init (k8s)
         working-directory: terraform/k8s
-        id: init
+        id: init_k8s
         run: terraform init
 
-      - name: Terraform Validate
+      - name: Terraform validate (k8s)
         working-directory: terraform/k8s
-        id: validate
+        id: validate_k8s
         run: terraform validate -no-color
 
-      - name: Terraform Plan
+      # Runs a plan for the k8s resources to be deployed
+      - name: Terraform plan (k8s)
         if: github.event_name == 'pull_request'
         working-directory: terraform/k8s
-        id: plan
+        id: plan_k8s
         env:
           # Config
-          TF_VAR_IMAGE_TAG: latest
+          TF_VAR_FRONTEND_IMAGE_TAG: ${{ needs.vars.outputs.frontend_tag  }}
+          TF_VAR_BACKEND_IMAGE_TAG: ${{ needs.vars.outputs.backend_tag  }}
           # Creds
           TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           # Azure Auth
@@ -293,25 +286,33 @@ jobs:
         run: terraform plan -no-color
         continue-on-error: true
 
-      - uses: actions/github-script@0.9.0
+      # Post comment on PR with plan info
+      # This comment includes the plan for the k8s-cluster and the k8s resources
+      - uses: actions/github-script@5d03ada4b0a753e9460b312e61cc4f8fdeacf163 # pin@0.9.0
         if: github.event_name == 'pull_request'
         env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+          PLAN_K8S_CLUSTER: "terraform ${{ steps.plan_k8s_cluster.outputs.stdout }}"
+          PLAN_K8S: "terraform ${{ steps.plan_k8s.outputs.stdout }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `## Terraform Plan 🪐
-            - Terraform Format and Style 🖌: \`${{ steps.fmt.outcome }}\`
-            - Terraform Initialization ⚙️: \`${{ steps.init.outcome }}\`
-            - Terraform Validation 🤖: ${{ steps.validate.outputs.stdout }}
-            - Terraform Plan 📖: \`${{ steps.plan.outcome }}\`
-            
+            const output = `### Terraform Plan - \`k8s-cluster\` 🪐
+            - Terraform Format and Style 🖌: \`${{ steps.fmt_k8s_cluster.outcome }}\`
+            - Terraform Initialization ⚙️: \`${{ steps.init_k8s_cluster.outcome }}\`
+            - Terraform Validation 🤖: \`${{ steps.validate_k8s_cluster.outcome }}\`
+            - Terraform Plan 📖: \`${{ steps.plan_k8s_cluster.outcome }}\`
             <details><summary><b>Show Plan</b></summary>
-            
-            \`\`\`${process.env.PLAN}\`\`\`
-            
+            \`\`\`${process.env.PLAN_K8S_CLUSTER}\`\`\`
             </details>
-            
+            > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/k8s-cluster\`, Workflow: \`${{ github.workflow }}\`
+            ### Terraform Plan - \`k8s\` 🪐
+            - Terraform Format and Style 🖌: \`${{ steps.fmt_k8s.outcome }}\`
+            - Terraform Initialization ⚙️: \`${{ steps.init_k8s.outcome }}\`
+            - Terraform Validation 🤖: \`${{ steps.validate_k8s.outcome }}\`
+            - Terraform Plan 📖: \`${{ steps.plan_k8s.outcome }}\`
+            <details><summary><b>Show Plan</b></summary>
+            \`\`\`${process.env.PLAN_K8S}\`\`\`
+            </details>
             > Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`terraform/k8s\`, Workflow: \`${{ github.workflow }}\``;
               
             github.issues.createComment({
@@ -321,12 +322,87 @@ jobs:
               body: output
             })
 
-      - name: Terraform apply
-        if: github.event_name == 'push'
+  # Deploys resources to Azure
+  terraform-apply:
+    # The environment can be anything you wish, for now we use development
+    environment: development
+
+    needs: [changes, build, terraform-plan, vars]
+    if:
+      needs.changes.outputs.src == 'true' || needs.changes.outputs.terraform-k8s
+      == 'true' || needs.changes.outputs.terraform-k8s-cluster == 'true'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Setup
+      - uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
+
+      - uses: azure/login@77f1b2e3fb80c0e8645114159d17008b8a2e475a # pin@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - uses: hashicorp/setup-terraform@3d8debd658c92063839bc97da5c2427100420dec # pin@v1
+        with:
+          terraform_version: 1.0.6
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Terraform version
+        run: terraform --version
+
+      - uses: azure/k8s-set-context@2f6bfda1e23e1a8cdfcfabc5c9e8894eec34734f # pin@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+        id: setcontext
+
+      # Register Slash Commands
+      # If any 'commands' files were changed, re-register them with Discord
+      - uses: satackey/action-docker-layer-caching@46d2c640b1d8ef50d185452ad6fb324e6bd1d052 # pin@v0.0.11
+        continue-on-error: true
+      - name: Register Slash Commands
+        if: needs.changes.outputs.discord-commands == 'true'
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
+        run: |
+          export DISCORD_TOKEN=$(echo $DISCORD_TOKEN | base64 -d)
+          echo "DISCORD_TOKEN=$DISCORD_TOKEN" >> src/frontend/.env
+          echo "CLIENT_ID=$CLIENT_ID" >> src/frontend/.env
+          touch src/backend/backend.env
+          docker-compose build
+          docker-compose run --rm frontend "register.js"
+          echo "Registered all slash commands in the src/frontend/commands folder!"
+      # Apply (k8s-cluster)
+      - name: Terraform init (k8s-cluster)
+        working-directory: terraform/k8s-cluster
+        id: init_k8s_cluster
+        run: terraform init
+
+      - name: Terraform apply (k8s-cluster)
+        if: github.event_name == 'pull_request'
+        working-directory: terraform/k8s-cluster
+        env:
+          # Azure Auth
+          TF_VAR_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          TF_VAR_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          TF_VAR_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          TF_VAR_TENANT_ID: ${{ secrets.TENANT_ID }}
+        run: terraform apply -auto-approve
+
+      # Apply (k8s)
+      - name: Terraform init (k8s)
+        working-directory: terraform/k8s
+        id: init_k8s
+        run: terraform init
+
+      - name: Terraform apply (k8s)
+        if: github.event_name == 'pull_request'
         working-directory: terraform/k8s
         env:
           # Config
-          TF_VAR_IMAGE_TAG: latest
+          TF_VAR_FRONTEND_IMAGE_TAG: ${{ needs.vars.outputs.frontend_tag  }}
+          TF_VAR_BACKEND_IMAGE_TAG: ${{ needs.vars.outputs.backend_tag  }}
           # Creds
           TF_VAR_DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           # Azure Auth
