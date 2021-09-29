@@ -4,7 +4,7 @@ on:
     branches:
       - main
   pull_request:
-    branches: [ main ]
+
 jobs:
   misspell:
     name: runner / misspell
@@ -19,6 +19,8 @@ jobs:
           locale: "US"
 
   first-interaction:
+    permissions:
+      pull-requests: write
     name: runner / first-interaction
     runs-on: ubuntu-latest
     steps:
