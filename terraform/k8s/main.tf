@@ -2,7 +2,7 @@ module "backend" {
   source = "./modules/containers/backend"
 
   # Environment variables
-  IMAGE_TAG   = var.IMAGE_TAG
+  IMAGE_TAG   = var.BACKEND_IMAGE_TAG
   ENVIRONMENT = var.ENVIRONMENT
 
   # Config
@@ -15,7 +15,7 @@ module "frontend" {
   # Secret variables
   DISCORD_TOKEN = var.DISCORD_TOKEN
   # Environment variables
-  IMAGE_TAG   = var.IMAGE_TAG
+  IMAGE_TAG   = var.FRONTEND_IMAGE_TAG
   ENVIRONMENT = var.ENVIRONMENT
 
   # Config
