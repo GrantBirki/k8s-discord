@@ -14,4 +14,4 @@ services:
     restart: always
     build: ./src/backend
     ports:
-      - "80:80"
+      - "5000:5000"
