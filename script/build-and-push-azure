@@ -7,12 +7,11 @@ set -e
 # Global Directory Variables
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # The directory of this script
 REPO_DIR="$(dirname "$SCRIPT_DIR")" # The root directory of this repository
-ACR_NAME="example" # Set a static registry name here if you want
 
-if [ "$ACR_NAME" = "example" ]; then
-  echo "ℹ️ Please set your ACR_NAME (examplek8sacr)";
-  read -p "ACR Name: " ACR_NAME
-fi
+# Get the ACR_NAME from the Terraform state
+cd $REPO_DIR/terraform/k8s-cluster
+ACR_NAME=$(terraform show -json | jq -r ".values.outputs.acr_name.value")
+cd $REPO_DIR
 
 echo "🔨 Let's build some images and push them"
 

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# This script gets the current image tag of a given resource in Terraform
+
+# Usage: ./current_tag <resource>
+# Example: ./current_tag frontend
+# Returns: deadbeef (sha)
+
+set -e
+
+# Global Directory Variables
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )" # The directory of this script
+REPO_DIR="$( dirname $(dirname "$SCRIPT_DIR") )" # The root directory of this repository
+
+cd $REPO_DIR/terraform/k8s
+
+terraform show -json | jq -r ".values.outputs.$1_image_tag.value"
