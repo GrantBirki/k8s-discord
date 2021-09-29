@@ -72,6 +72,12 @@ This part is important for CI/CD to pass! You will need to configure the followi
 
   > This is your Discord bot token. It MUST be `base64` encoded since it is injected as a native Kubernetes secret
 
+- Discord Client ID
+  - Key: `DISCORD_CLIENT_ID`
+  - Value: `<client id>`
+
+  > This is your Discord bot client id. This value can be found on the `OAuth2` page of your Discord bot in the Discord developer portal
+
 - Azure CLIENT_ID
   - Key: `CLIENT_ID`
   - Value: `<clientId>`
