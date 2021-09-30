@@ -103,6 +103,32 @@ Continue with the complete destruction of your K8s cluster (y/n)? y
 ✨ Done! ✨
 ```
 
+## Developing Locally 🛠️
+
+If you want to test out the bot locally, rather than deploy to Azure AKS right away you can do so with `docker-compose`
+
+### Prerequisites
+
+- You have created a Discord bot with [Slash command permissions](https://canary.discord.com/developers/docs/interactions/slash-commands#slash-commands)
+- You have invited your Discord bot to a Guild (channel) with the Slash command permissions
+- You have filled out the variables in the `src/frontend/.env.example` and renamed it to `src/frontend/.env`
+- You have run the `make register` command which registers your Slash commands with Discord
+
+Now you can run the bot locally:
+
+```console
+$ make run
+[#] Killing old docker processes
+[#] Building docker containers
+[+] Building 2.4s (17/17) FINISHED
+[+] Building 1.9s (11/11) FINISHED
+Creating frontend ... done
+Creating backend  ... done
+[#] The Docker stack is now running!
+```
+
+Open up Discord and run `/ping` to test the bot in the Discord channel you added it to!
+
 ## Project Folder Information 📂
 
 - `script/` - Contains various scripts for deployments and maintenance
