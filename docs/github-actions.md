@@ -20,6 +20,10 @@ Here are two great documents to create an Azure Service Principal and assign per
 1. [Create a Service Principal](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
 1. [Assign Roles to a Service Principal](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current)
 
+GitHub Environment:
+
+This workflow assumes that an empty environment named `development` has been created in your GitHub repository
+
 GitHub Secrets:
 
 This part is important for CI/CD to pass! You will need to configure the following GitHub secrets as `key` / `value` pairs.
@@ -71,6 +75,12 @@ This part is important for CI/CD to pass! You will need to configure the followi
   - Value: `<base64_encoded_token>`
 
   > This is your Discord bot token. It MUST be `base64` encoded since it is injected as a native Kubernetes secret
+
+- Discord Client ID
+  - Key: `DISCORD_CLIENT_ID`
+  - Value: `<client id>`
+
+  > This is your Discord bot client id. This value can be found on the `OAuth2` page of your Discord bot in the Discord developer portal
 
 - Azure CLIENT_ID
   - Key: `CLIENT_ID`

@@ -4,26 +4,28 @@ on:
     branches:
       - main
   pull_request:
-    branches: [ main ]
+
 jobs:
   misspell:
     name: runner / misspell
     runs-on: ubuntu-latest
     steps:
       - name: Check out code.
-        uses: actions/checkout@v2
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
       - name: misspell
-        uses: reviewdog/action-misspell@v1
+        uses: reviewdog/action-misspell@bd39f95716e0fdb83f709fdd49666bd466663f56 # pin@v1
         with:
           github_token: ${{ secrets.github_token }}
           locale: "US"
 
   first-interaction:
+    permissions:
+      pull-requests: write
     name: runner / first-interaction
     runs-on: ubuntu-latest
     steps:
       - name: first-interaction
-        uses: actions/first-interaction@v1.1.0
+        uses: actions/first-interaction@bd33205aa5c96838e10fd65df0d01efd613677c1 # pin@v1.1.0
         if: github.event_name == 'pull_request'
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}

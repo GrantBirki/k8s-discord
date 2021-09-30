@@ -1,9 +1,9 @@
 terraform {
   backend "remote" {
-    organization = "birki-io" # Change this to your own organization
+    organization = "birki-io" # Change this to your own organization (CHANGE ME)
 
     workspaces {
-      name = "k8s-cluster-testing" # Change this to your own workspace name
+      name = "k8s-cluster-testing" # Change this to your own workspace name (CHANGE ME)
     }
   }
 

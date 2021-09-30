@@ -8,7 +8,7 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - targetPort: 80
-      port: 80
+    - targetPort: 5000
+      port: 5000
   selector:
     name: backend

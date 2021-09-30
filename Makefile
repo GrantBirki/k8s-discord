@@ -13,5 +13,8 @@ run:
 
 	@echo "\e[32m[#] The Docker stack is now running!\e[0m"
 
+register: # This just registers the dev environment
+	@docker-compose run --rm frontend "register.js" && echo "\e[32m[#] Registered all slash commands in the src/frontend/commands folder!\e[0m"
+
 push-azure:
 	script/build-and-push-azure

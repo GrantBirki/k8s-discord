@@ -7,6 +7,7 @@ data "kubectl_path_documents" "frontend_deployment_manifest" {
   vars = {
     ENVIRONMENT = "${var.ENVIRONMENT}"
     IMAGE_TAG   = "${var.IMAGE_TAG}"
+    ACR_NAME    = "${var.ACR_NAME}"
   }
   pattern = "modules/containers/frontend/deployment.yaml"
 }

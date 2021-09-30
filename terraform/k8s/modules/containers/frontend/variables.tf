@@ -15,3 +15,8 @@ variable "IMAGE_TAG" {
   default     = "latest"
   type        = string
 }
+
+variable "ACR_NAME" {
+  description = "The name of the Azure Container Registry"
+  type = string
+}

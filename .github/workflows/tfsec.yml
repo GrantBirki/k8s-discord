@@ -4,18 +4,20 @@ on:
     branches:
       - main
   pull_request:
-    branches: [ main ]
+
 jobs:
   tfsec:
+    permissions:
+      pull-requests: write
     name: runner / tfsec
     runs-on: ubuntu-latest
 
     steps:
       - name: Clone repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # pin@v2
 
       - name: Run tfsec with reviewdog output on the PR
-        uses: reviewdog/action-tfsec@master
+        uses: reviewdog/action-tfsec@ea54c23693538de780fa97815f7de0ccc79b69d7 # pin@master
         with:
           github_token: ${{ secrets.github_token }}
           working_directory: terraform

@@ -10,6 +10,10 @@ output "kubernetes_cluster_full_id" {
   value = azurerm_kubernetes_cluster.default.id
 }
 
+output "acr_name" {
+  value = azurerm_container_registry.acr.name
+}
+
 # output "host" {
 #   value = azurerm_kubernetes_cluster.default.kube_config.0.host
 # }
