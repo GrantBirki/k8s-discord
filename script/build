@@ -57,6 +57,23 @@ else
   echo "✅ $TF_VAR_FILE contains non-default credentials"
 fi
 
+TF_VAR_FILE="terraform/k8s/terraform.auto.tfvars.json"
+if [ -f "$TF_VAR_FILE" ]; then
+    echo "✅ $TF_VAR_FILE exists"
+else 
+    echo "❌ $TF_VAR_FILE does not exist! Please create it and add your Azure credentials. Exiting..."
+    exit 1
+fi
+
+grep -i "aaaaaa-aaaa-aaaa-aaaa-aaaaaaaa\|bbbbbb-bbbb-bbbb-bbbb-bbbbbbbb" $TF_VAR_FILE
+
+if [ $? -ne 1 ]; then
+  echo "❌ Please update the '$TF_VAR_FILE' file to contain your Azure credentials! Exiting..."
+  exit 1
+else
+  echo "✅ $TF_VAR_FILE contains non-default credentials"
+fi
+
 set -e # Prevent any kind of script failures
 
 # First we deploy the infrastructure for the k8s cluster
